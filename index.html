@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="de"> # This is the beginning of an HTML document with the language set to German (de).
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recycling Classifier</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            text-align: center;
+        }
+        #imageUpload {
+            margin: 20px 0;
+        }
+        #uploadedImage {
+            max-width: 300px;
+            max-height: 300px;
+            margin: 20px 0;
+            display: none;
+        }
+        #results {
+            text-align: left;
+            margin-top: 20px;
+        }
+        .result-item {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .probability {
+            font-weight: bold;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Recycling Classifier</h1>
+        <p>Lade ein Bild hoch, um es zu klassifizieren:</p>
+        <input type="file" id="imageUpload" accept="image/*">
+        <br>
+        <img id="uploadedImage" alt="Hochgeladenes Bild">
+        <div id="results"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+
+    <script>
+        let model;
+
+        // Modell laden
+        async function loadModel() {
+            const URL = "./Model/";
+            model = await tmImage.load(URL + "model.json", URL + "metadata.json");
+            console.log("Modell geladen");
+        }
+
+        // Bild klassifizieren
+        async function classifyImage(imageElement) {
+            const predictions = await model.predict(imageElement);
+            return predictions;
+        }
+
+        // Ergebnisse anzeigen
+        function displayResults(predictions) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<h2>Ergebnisse:</h2>';
+
+            // Sortiere nach Wahrscheinlichkeit absteigend
+            predictions.sort((a, b) => b.probability - a.probability);
+
+            predictions.forEach(prediction => {
+                const probabilityPercent = (prediction.probability * 100).toFixed(2);
+                const resultItem = document.createElement('div');
+                resultItem.className = 'result-item';
+                resultItem.innerHTML = `
+                    <strong>${prediction.className}</strong>: 
+                    <span class="probability">${probabilityPercent}%</span>
+                `;
+                resultsDiv.appendChild(resultItem);
+            });
+        }
+
+        // Event Listener für File Upload
+        document.getElementById('imageUpload').addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const imageElement = document.getElementById('uploadedImage');
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    imageElement.src = e.target.result;
+                    imageElement.style.display = 'block';
+
+                    // Warte bis Bild geladen ist
+                    imageElement.onload = async () => {
+                        const predictions = await classifyImage(imageElement);
+                        displayResults(predictions);
+                    };
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Modell beim Laden der Seite initialisieren
+        window.addEventListener('load', loadModel);
+    </script>
+</body>
+</html>
