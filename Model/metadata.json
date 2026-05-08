@@ -1,1 +1,1 @@
-{"tfjsVersion":"1.7.4","tmVersion":"2.4.14","packageVersion":"0.8.4-alpha2","packageName":"@teachablemachine/image","timeStamp":"2026-05-05T13:57:14.101Z","userMetadata":{},"modelName":"tm-my-image-model","labels":["Metall","Glass","Plastik","Karton","Restmüll","Papier"],"imageSize":224}
+{"tfjsVersion":"1.7.4","tmVersion":"2.4.14","packageVersion":"0.8.4-alpha2","packageName":"@teachablemachine/image","timeStamp":"2026-05-08T06:07:32.363Z","userMetadata":{},"modelName":"tm-my-image-model","labels":["Metall","Plastik","Karton","Restmüll","Glass","Papier"],"imageSize":224}
