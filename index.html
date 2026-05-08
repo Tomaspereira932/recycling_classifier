@@ -33,19 +33,67 @@
             border: 1px solid #ddd;
             border-radius: 5px;
         }
-        .probability {
-            font-weight: bold;
-            color: #007bff;
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        #cameraPreview {
+            max-width: 100%;
+            max-height: 400px;
+            border: 2px solid #007bff;
+            border-radius: 5px;
+            margin: 20px 0;
+            display: none;
+        }
+        #cameraContainer {
+            display: none;
+            margin: 20px 0;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Recycling Classifier</h1>
-        <p>Lade ein Bild hoch, um es zu klassifizieren:</p>
-        <input type="file" id="imageUpload" accept="image/*">
-        <br>
+        <p>Wähle eine Option:</p>
+        
+        <div class="button-group">
+            <button type="button" id="uploadBtn" onclick="toggleUpload()">📁 Datei hochladen</button>
+            <button type="button" id="cameraBtn" onclick="toggleCamera()">📷 Kamera</button>
+        </div>
+
+        <div id="uploadContainer">
+            <input type="file" id="imageUpload" accept="image/*">
+        </div>
+
+        <div id="cameraContainer">
+            <video id="cameraPreview" autoplay playsinline></video>
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button type="button" id="takePhoto">Foto aufnehmen</button>
+                <button type="button" id="stopCamera">Kamera beenden</button>
+            </div>
+        </div>
+
         <img id="uploadedImage" alt="Hochgeladenes Bild">
+        <canvas id="captureCanvas" style="display:none;"></canvas>
         <div id="results"></div>
     </div>
 
@@ -54,6 +102,69 @@
 
     <script>
         let model;
+        let cameraStream;
+
+        function toggleUpload() {
+            document.getElementById('uploadContainer').style.display = 'block';
+            document.getElementById('cameraContainer').style.display = 'none';
+            stopCameraStream();
+        }
+
+        function toggleCamera() {
+            document.getElementById('uploadContainer').style.display = 'none';
+            document.getElementById('cameraContainer').style.display = 'block';
+            startCameraStream();
+        }
+
+        async function startCameraStream() {
+            try {
+                cameraStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment' } 
+                });
+                document.getElementById('cameraPreview').srcObject = cameraStream;
+                document.getElementById('cameraPreview').style.display = 'block';
+            } catch (error) {
+                alert('Kamera konnte nicht aktiviert werden. Bitte erlaube den Zugriff.');
+                toggleUpload();
+            }
+        }
+
+        function stopCameraStream() {
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream = null;
+            }
+            document.getElementById('cameraPreview').style.display = 'none';
+        }
+
+        async function capturePhoto() {
+            const video = document.getElementById('cameraPreview');
+            const canvas = document.getElementById('captureCanvas');
+            
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0);
+            
+            const dataUrl = canvas.toDataURL('image/png');
+            stopCameraStream();
+            
+            const imageElement = document.getElementById('uploadedImage');
+            imageElement.src = dataUrl;
+            imageElement.style.display = 'block';
+            
+            imageElement.onload = async () => {
+                const predictions = await classifyImage(imageElement);
+                displayResults(predictions);
+            };
+        }
+
+        document.getElementById('takePhoto').addEventListener('click', capturePhoto);
+        document.getElementById('stopCamera').addEventListener('click', () => {
+            stopCameraStream();
+            toggleUpload();
+        });
 
         // Modell laden
         async function loadModel() {
