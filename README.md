@@ -14,7 +14,6 @@ Eine benutzerfreundliche Web-Anwendung entwickeln, die es Nutzern ermöglicht:
 - Ein Abfallbild hochzuladen ODER mit der Kamera zu fotografieren
 - Das Bild automatisch in Recyclable-Kategorien zu klassifizieren
 - Die Wahrscheinlichkeiten für jede Kategorie zu sehen
-- Sofort Hinweise zur korrekten Sortierung zu erhalten (in Zukunft noch hinzufügen)
 
 ---
 
